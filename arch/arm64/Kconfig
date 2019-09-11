@@ -1125,6 +1125,23 @@ config CMDLINE_FORCE
 	  command-line options your boot loader passes to the kernel.
 endchoice
 
+config CMDLINE_DROP_DANGEROUS_ANDROID_OPTIONS
+	bool "Drop certain dangerous options from cmdline"
+	default n
+	help
+	  Android bootloader passes some arguments in kernel command
+	  line, that make booting custom OSes harder:
+	  
+	    * skip_initramfs
+	    * root=PARTUUID=...
+	    * init=/init
+	  
+	  Those parameters override default boot partition to hardcoded,
+	  set init binary to /init, disable booting from initramfs.
+	  
+	  If enabled, those parameters will be erased from bootloader's
+	  command line, and custom OS can boot the way it likes.
+
 config EFI_STUB
 	bool
 

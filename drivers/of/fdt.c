@@ -1012,6 +1012,20 @@ int __init early_init_dt_scan_chosen(unsigned long node, const char *uname,
 
 	pr_debug("Command line is: %s\n", (char*)data);
 
+#ifdef CONFIG_CMDLINE_DROP_DANGEROUS_ANDROID_OPTIONS
+	pr_err("Replacing dangerous cmdline options...");
+	cmdline = strstr((const char *)data, "skip_initramfs");
+	if (cmdline)
+		*cmdline = '_';
+	cmdline = strstr((const char *)data, "root=");
+	if (cmdline)
+		*cmdline = '_';
+	cmdline = strstr((const char *)data, "init=");
+	if (cmdline)
+		*cmdline = '_';
+	pr_err("Command line now is: %s\n", (char*)data);
+#endif
+
 	/* break now */
 	return 1;
 }
