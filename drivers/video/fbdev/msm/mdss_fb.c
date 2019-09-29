@@ -1751,7 +1751,7 @@ static int mdss_fb_probe(struct platform_device *pdev)
 
 	mfd->bl_scale = 1024;
 	mfd->ad_bl_level = 0;
-	mfd->fb_imgType = MDP_RGBA_8888;
+	mfd->fb_imgType = MDP_BGRA_8888;
 	mfd->calib_mode_bl = 0;
 	mfd->unset_bl_level = U32_MAX;
 	mfd->bl_extn_level = -1;
@@ -3158,6 +3158,25 @@ static int mdss_fb_register(struct msm_fb_data_type *mfd)
 		var->blue.offset = 16;
 		var->green.offset = 8;
 		var->red.offset = 0;
+		var->blue.length = 8;
+		var->green.length = 8;
+		var->red.length = 8;
+		var->blue.msb_right = 0;
+		var->green.msb_right = 0;
+		var->red.msb_right = 0;
+		var->transp.offset = 24;
+		var->transp.length = 8;
+		bpp = 4;
+		break;
+
+	case MDP_BGRA_8888:
+		fix->type = FB_TYPE_PACKED_PIXELS;
+		fix->xpanstep = 1;
+		fix->ypanstep = 1;
+		var->vmode = FB_VMODE_NONINTERLACED;
+		var->blue.offset = 0;
+		var->green.offset = 8;
+		var->red.offset = 16;
 		var->blue.length = 8;
 		var->green.length = 8;
 		var->red.length = 8;
