@@ -12,6 +12,8 @@
 
 #define pr_fmt(fmt) "icnss: " fmt
 
+#define DEBUG  /* temporary enforce debug prints */
+
 #include <asm/dma-iommu.h>
 #include <linux/of_address.h>
 #include <linux/clk.h>
@@ -3768,6 +3770,9 @@ static int icnss_fw_debug_show(struct seq_file *s, void *data)
 	seq_puts(s, "\nCMD: dynamic_feature_mask\n");
 	seq_puts(s, "  VAL: (64 bit feature mask)\n");
 
+	seq_puts(s, "\nCMD: pmos_start\n");
+	seq_puts(s, "  VAL: (ignored for now)\n");
+
 	if (!test_bit(ICNSS_FW_READY, &priv->state)) {
 		seq_puts(s, "Firmware is not ready yet, can't run test_mode!\n");
 		goto out;
@@ -3868,6 +3873,74 @@ out:
 	return ret;
 }
 
+static int icnss_test_mode_pmos_startup(struct icnss_priv *priv)
+{
+	int ret;
+
+	icnss_pr_info("postmarketOS startup hack!");
+
+	/* pmOS: We are trying to do some work without QMI, so
+	 *     set this wonderful quirk that already was here */
+	set_bit(SKIP_QMI, &quirks);
+
+	/* In icnss_driver_event_work() both functions:
+	 *   - icnss_driver_event_server_arrive()
+	 *   - icnss_driver_event_fw_ready_ind()
+	 * are called inside spin_lock_irqsave() / spin_unlock_irqrestore() block
+	 * So, try to emulate this here, too.
+	 */
+	/* penv is some global state structure for whole icnss driver */
+	unsigned int flags = 0;
+	spin_lock_irqsave(&penv->event_lock, flags);
+
+	/* pmOS: Emulate QMI event from userspace */
+	/* It sets bit ICNSS_FW_READY and runs some other checks */
+	icnss_driver_event_fw_ready_ind(NULL);
+
+	if (!test_bit(ICNSS_FW_READY, &priv->state)) {
+		icnss_pr_err("Firmware is not ready yet!, wait for FW READY: state: 0x%lx\n",
+			     priv->state);
+		ret = -ENODEV;
+		goto out;
+	}
+
+	if (test_bit(ICNSS_DRIVER_PROBED, &priv->state)) {
+		icnss_pr_err("Machine mode is running, can't run test mode: state: 0x%lx\n",
+			     priv->state);
+		ret = -EINVAL;
+		goto out;
+	}
+
+	/* pmOS: Emulate the same power-on sequence as from QMI event handler,
+	 * just skipping some QMI response parts */
+
+	ret = icnss_hw_power_on(priv);
+	if (ret) {
+		icnss_pr_err("pmOS startup: failed to icnss_hw_power_on!");
+		goto out;
+	}
+	icnss_pr_info("pmOS startup: hw powered on!");
+
+	if (!test_bit(ICNSS_MSA0_ASSIGNED, &penv->state)) {
+		icnss_pr_info("pmOS startup: assigning MSA0...");
+		ret = icnss_assign_msa_perm_all(penv, ICNSS_MSA_PERM_WLAN_HW_RW);
+		if (ret < 0) {
+			icnss_pr_err("pmOS startup: failed to icnss_assign_msa_perm_all!");
+			goto out;
+		}
+		set_bit(ICNSS_MSA0_ASSIGNED, &penv->state);
+		icnss_pr_info("pmOS startup: MSA0 perms assigned.");
+	}
+
+	//icnss_pr_info("pmOS startup: before icnss_init_vph_monitor...");
+	//icnss_init_vph_monitor(penv);
+
+out:
+	spin_unlock_irqrestore(&penv->event_lock, flags);
+	icnss_pr_info("pmOS startup: complete, returning %d", ret);
+	return ret;
+}
+
 static ssize_t icnss_fw_debug_write(struct file *fp,
 				    const char __user *user_buf,
 				    size_t count, loff_t *off)
@@ -3921,6 +3994,8 @@ static ssize_t icnss_fw_debug_write(struct file *fp,
 		}
 	} else if (strcmp(cmd, "dynamic_feature_mask") == 0) {
 		ret = wlfw_dynamic_feature_mask_send_sync_msg(priv, val);
+	} else if (strcmp(cmd, "pmos_start") == 0) {
+		ret = icnss_test_mode_pmos_startup(priv);
 	} else {
 		return -EINVAL;
 	}

@@ -23,6 +23,9 @@
  *
  */
 
+#define DEBUG        /* temporarily enable tracing */
+#define WLAN_DEBUG
+
 /* Include Files */
 #include <wlan_hdd_includes.h>
 #include <cds_api.h>
