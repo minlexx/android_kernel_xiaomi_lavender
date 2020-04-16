@@ -324,6 +324,11 @@
 			clock-names = "core";
 		};
 
+		restart@10ac000 {
+			compatible = "qcom,pshold";
+			reg = <0x010ac000 0x4>;
+		};
+
 		tlmm: pinctrl@3100000 {
 			compatible = "qcom,sdm660-pinctrl";
 			reg = <0x03100000 0x400000>,
