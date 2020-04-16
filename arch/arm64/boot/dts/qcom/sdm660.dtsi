@@ -317,6 +317,13 @@
 			reg = <0x00100000 0x94000>;
 		};
 
+		rng@793000 {
+			compatible = "qcom,prng-ee";
+			reg = <0x00793000 0x1000>;
+			clocks = <&gcc GCC_PRNG_AHB_CLK>;
+			clock-names = "core";
+		};
+
 		tlmm: pinctrl@3100000 {
 			compatible = "qcom,sdm660-pinctrl";
 			reg = <0x03100000 0x400000>,
