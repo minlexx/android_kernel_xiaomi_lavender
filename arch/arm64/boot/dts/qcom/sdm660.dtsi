@@ -6,6 +6,7 @@
 
 #include <dt-bindings/interrupt-controller/arm-gic.h>
 #include <dt-bindings/clock/qcom,gcc-sdm660.h>
+#include <dt-bindings/clock/qcom,rpmcc.h>
 
 / {
 	interrupt-parent = <&intc>;
@@ -325,6 +326,11 @@
 		rpm_requests: glink-channel {
 			compatible = "qcom,rpm-sdm660";
 			qcom,glink-channels = "rpm_requests";
+
+			rpmcc: clock-controller {
+				compatible = "qcom,rpmcc-sdm660";
+				#clock-cells = <1>;
+			};
 		};
 	};
 
