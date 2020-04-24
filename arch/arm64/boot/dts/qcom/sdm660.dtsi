@@ -315,6 +315,19 @@
 		hwlocks = <&tcsr_mutex 3>;
 	};
 
+	rpm-glink {
+		compatible = "qcom,glink-rpm";
+
+		interrupts = <GIC_SPI 168 IRQ_TYPE_EDGE_RISING>;
+		qcom,rpm-msg-ram = <&rpm_msg_ram>;
+		mboxes = <&apcs_glb 0>;
+
+		rpm_requests: glink-channel {
+			compatible = "qcom,rpm-sdm660";
+			qcom,glink-channels = "rpm_requests";
+		};
+	};
+
 	soc: soc {
 		#address-cells = <1>;
 		#size-cells = <1>;
@@ -327,6 +340,11 @@
 			#reset-cells = <1>;
 			#power-domain-cells = <1>;
 			reg = <0x00100000 0x94000>;
+		};
+
+		rpm_msg_ram: memory@778000 {
+			compatible = "qcom,rpm-msg-ram";
+			reg = <0x00778000 0x7000>;
 		};
 
 		rng@793000 {
@@ -400,6 +418,13 @@
 				 <&gcc GCC_BLSP1_AHB_CLK>;
 			clock-names = "core", "iface";
 			status = "disabled";
+		};
+
+		apcs_glb: mailbox@17911000 {
+			compatible = "qcom,sdm660-apcs-hmss-global";
+			reg = <0x17911000 0x1000>;
+
+			#mbox-cells = <1>;
 		};
 
 		timer@17920000 {
