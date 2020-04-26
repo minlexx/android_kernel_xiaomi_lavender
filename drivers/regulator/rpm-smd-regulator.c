@@ -1810,7 +1810,33 @@ static int rpm_vreg_device_probe(struct platform_device *pdev)
 
 	platform_set_drvdata(pdev, reg);
 
-	pr_debug("successfully probed: %s\n", reg->rdesc.name);
+	/* - qcom,regulator-type: Type of this regulator.  Supported values are:
+				0 = LDO
+				1 = SMPS
+				2 = VS
+				3 = NCP
+				4 = Buck or Boost (BoB) */
+	static const char *s_reg_type_names[] = {
+		[RPM_REGULATOR_TYPE_LDO] = "LDO",
+		[RPM_REGULATOR_TYPE_SMPS] = "SMPS",
+		[RPM_REGULATOR_TYPE_VS] = "VS",
+		[RPM_REGULATOR_TYPE_NCP] = "NCP",
+		[RPM_REGULATOR_TYPE_BOB] = "BOB",
+	};
+
+	dev_printk(KERN_DEBUG, dev,
+		"probed: %s (id %u, res-name: %s, type: %s)",
+		reg->rdesc.name,
+		reg->rpm_vreg->resource_id,
+		reg->rpm_vreg->resource_name,
+		s_reg_type_names[reg->rpm_vreg->regulator_type]
+	);
+	dev_printk(KERN_DEBUG, dev,
+		"  min-max: %d - %d uV, "
+		"  use_pin_ctrl_for_enable: %d",
+		reg->min_uV, reg->max_uV,
+		reg->use_pin_ctrl_for_enable
+	);
 
 	return 0;
 
