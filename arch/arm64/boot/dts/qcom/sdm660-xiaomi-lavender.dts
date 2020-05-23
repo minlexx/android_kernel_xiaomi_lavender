@@ -5,6 +5,7 @@
 
 /dts-v1/;
 
+#include <dt-bindings/input/linux-event-codes.h>
 #include "sdm660.dtsi"
 #include "pm660.dtsi"
 #include "pm660l.dtsi"
@@ -61,6 +62,16 @@
 	status = "okay";
 	pinctrl-names = "default";
 	pinctrl-0 = <&uart_console_active>;
+};
+
+&pon {
+	resin {
+		compatible = "qcom,pm8941-resin";
+		interrupts = <0x0 0x8 1 IRQ_TYPE_EDGE_BOTH>;
+		debounce = <15625>;
+		bias-pull-up;
+		linux,code = <KEY_VOLUMEDOWN>;
+	};
 };
 
 &rpm_requests {
