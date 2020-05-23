@@ -441,6 +441,37 @@
 					bias-disable;
 				};
 			};
+
+			sdc1_clk: sdc1_clk_on {
+				pinconf {
+					pins = "sdc1_clk";
+					bias-disable;		/* NO pull */
+					drive-strength = <16>;	/* 16 MA */
+				};
+			};
+
+			sdc1_cmd: sdc1_cmd_on {
+				pinconf {
+					pins = "sdc1_cmd";
+					bias-pull-up;		/* pull up */
+					drive-strength = <10>;	/* 10 MA */
+				};
+			};
+
+			sdc1_data: sdc1_data_on {
+				pinconf {
+					pins = "sdc1_data";
+					bias-pull-up;		/* pull up */
+					drive-strength = <10>;	/* 10 MA */
+				};
+			};
+
+			sdc1_rclk: sdc1_rclk_on {
+				pinconf {
+					pins = "sdc1_rclk";
+					bias-pull-down;		/* pull down */
+				};
+			};
 		};
 
 		spmi_bus: spmi@800f000 {
@@ -460,6 +491,20 @@
 			interrupt-controller;
 			#interrupt-cells = <4>;
 			cell-index = <0>;
+		};
+
+		sdhc_1: sdhci@c0c4000 {
+			compatible = "qcom,sdhci-msm-v5";
+			status = "disabled";
+			reg = <0x0c0c4000 0x1000>,
+				<0x0c0c5000 0x1000>;
+			reg-names = "hc", "cqhci";
+			interrupts = <GIC_SPI 110 IRQ_TYPE_LEVEL_HIGH>,
+				<GIC_SPI 112 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-names = "hc_irq", "pwr_irq";
+			clocks = <&gcc GCC_SDCC1_APPS_CLK>,
+				<&gcc GCC_SDCC1_AHB_CLK>;
+			clock-names = "core", "iface";
 		};
 
 		blsp1_uart2: serial@c170000 {

@@ -18,6 +18,7 @@
 
 	aliases {
 		serial0 = &blsp1_uart2;
+		sdhc1 = &sdhc_1; /* SDC1 eMMC slot */
 	};
 
 	chosen {
@@ -157,6 +158,8 @@
 		pm660_l8: l8 {
 			regulator-min-microvolt = <1750000>;
 			regulator-max-microvolt = <1900000>;
+			//regulator-boot-on;
+			//regulator-allow-set-load;
 		};
 		pm660_l9: l9 {
 			regulator-min-microvolt = <1750000>;
@@ -231,6 +234,9 @@
 		pm660l_l4: l4 {
 			regulator-min-microvolt = <1700000>;
 			regulator-max-microvolt = <2950000>;
+			/* regulator-boot-on;   - nope, breaks things */
+			regulator-allow-set-load;         /* opendata had this */
+			regulator-system-load = <200000>; /* opendata had this */
 		};
 		pm660l_l5: l5 {
 			regulator-min-microvolt = <1721000>;
@@ -253,6 +259,20 @@
 			regulator-max-microvolt = <3600000>;
 		};
 	};
+};
+
+&sdhc_1 {
+	status = "okay";
+	bus-width = <8>;
+	non-removable;
+	mmc-ddr-1_8v;    /* eMMC high-speed DDR mode (1.8V I/O) is supported. */
+	mmc-hs200-1_8v;  /* eMMC HS200 mode (1.8V I/O) is supported. */
+	mmc-hs400-1_8v;  /* eMMC HS400 mode (1.8V I/O) is supported. */
+	//vmmc-supply = <&pm660l_l4>;  /* Supply for the card power */
+	//vqmmc-supply = <&pm660_l8>;  /* Supply for the bus IO line power */
+	/* opendata had SDHCI_QUIRK2_BROKEN_HS200 set in .quirks2 member for sdhci-msm driver */
+	pinctrl-names = "default";
+	pinctrl-0 = <&sdc1_clk &sdc1_cmd &sdc1_data &sdc1_rclk>;
 };
 
 &tlmm {
