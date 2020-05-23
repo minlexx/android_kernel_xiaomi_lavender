@@ -5,7 +5,9 @@
 
 /dts-v1/;
 
+#include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/input/linux-event-codes.h>
+#include <dt-bindings/pinctrl/qcom,pmic-gpio.h>
 #include "sdm660.dtsi"
 #include "pm660.dtsi"
 #include "pm660l.dtsi"
@@ -32,6 +34,25 @@
 			height = <2340>;
 			stride = <(1080 * 4)>;
 			format = "a8r8g8b8";
+		};
+	};
+
+	gpio_keys {
+		/* compatible = "gpio-keys"; does not work */
+		compatible = "gpio-keys-polled";
+		poll-interval = <100>; /* needed only for gpio-keys-polled */
+		label = "Volume up";
+		autorepeat;
+		pinctrl-names = "default";
+		pinctrl-0 = <&vol_up_pin_active>;
+
+		vol-up {
+			label = "Volume up";
+			gpios = <&pm660l_gpios 7 GPIO_ACTIVE_LOW>;
+			linux,input-type = <EV_KEY>;
+			linux,code = <KEY_VOLUMEUP>;
+			debounce-interval = <15>;
+			/* wakeup-source; Note: gpio-keys-polled does not support this */
 		};
 	};
 
@@ -62,6 +83,16 @@
 	status = "okay";
 	pinctrl-names = "default";
 	pinctrl-0 = <&uart_console_active>;
+};
+
+&pm660l_gpios {
+	vol_up_pin_active: vol_up_pin {
+		pins = "gpio7";
+		function = "normal";
+		input-enable;
+		bias-pull-up;
+		qcom,drive-strength = <PMIC_GPIO_STRENGTH_NO>;
+	};
 };
 
 &pon {
