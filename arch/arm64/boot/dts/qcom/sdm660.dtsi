@@ -15,6 +15,77 @@
 
 	chosen { };
 
+	reserved-memory {
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+
+		wlan_msa_guard: memory@85600000 {
+			reg = <0x0 0x85600000 0x0 0x100000>;
+			no-map;
+		};
+
+		wlan_msa_mem: memory@85700000 {
+			reg = <0x0 0x85700000 0x0 0x100000>;
+			no-map;
+		};
+
+		/* removed_regions in downstream / qhee_code */
+		memory@85800000 {
+			reg = <0x0 0x85800000 0x0 0x800000>;
+			no-map;
+		};
+
+		smem_mem: memory@86000000 {
+			reg = <0x0 0x86000000 0x0 0x200000>;
+			no-map;
+		};
+
+		/* tz_mem */
+		memory@86200000 {
+			reg = <0x0 0x86200000 0x0 0x2D00000>;
+			/* 0x86200000 + 0x2D00000 = 0x88F00000 */
+			no-map;
+		};
+
+		/* downstream has this: */
+		/* removed_regions@85800000 {
+			reg = <0x0 0x85800000 0x0 0x3700000>;
+			no-map;
+		}; */
+		/* which covers region starting from removed_regions to 0x88F00000 (end of our tz_mem) */
+
+		/* modem_fw_region */
+		memory@8ac00000 {
+			reg = <0x0 0x8ac00000 0x0 0x7e00000>;
+			no-map;
+		};
+
+		/* adsp_fw_region */
+		memory@92a00000 {
+			reg = <0x0 0x92a00000 0x0 0x1e00000>;
+			no-map;
+		};
+
+		/* pil_mba_mem */
+		memory@94800000 {
+			reg = <0x0 0x94800000 0x0 0x200000>;
+			no-map;
+		};
+
+		/* cdsp_fw_region */
+		memory@94a00000 {
+			reg = <0x0 0x94a00000 0x0 0x600000>;
+			no-map;
+		};
+
+		/* cont_splash_region / framebuffer */
+		memory@9d400000 {
+			reg = <0x0 0x9d400000 0x0 0x2400000>;
+			no-map;
+		};
+	};
+
 	clocks {
 		xo_board: xo_board {
 			compatible = "fixed-clock";
