@@ -399,6 +399,13 @@
 			reg = <0x00778000 0x7000>;
 		};
 
+		qfprom: qfprom@780000 {
+			compatible = "qcom,qfprom";
+			reg = <0x00780000 0x621c>;
+			#address-cells = <1>;
+			#size-cells = <1>;
+		};
+
 		rng@793000 {
 			compatible = "qcom,prng-ee";
 			reg = <0x00793000 0x1000>;
