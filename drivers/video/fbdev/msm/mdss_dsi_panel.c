@@ -11,6 +11,8 @@
  * GNU General Public License for more details.
  */
 
+#define DEBUG
+
 #include <linux/module.h>
 #include <linux/interrupt.h>
 #include <linux/of.h>
@@ -375,13 +377,17 @@ static int mdss_dsi_request_gpios(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 				       rc);
 			goto disp_en_gpio_err;
 		}
+		pr_info("%s: requested disp_en GPIO %d", __func__, ctrl_pdata->disp_en_gpio);
 	}
+
 	rc = gpio_request(ctrl_pdata->rst_gpio, "disp_rst_n");
 	if (rc) {
 		pr_err("request reset gpio failed, rc=%d\n",
 			rc);
 		goto rst_gpio_err;
 	}
+	pr_info("%s: requested disp_rst_n (rst) GPIO %d", __func__, ctrl_pdata->rst_gpio);
+
 	if (gpio_is_valid(ctrl_pdata->avdd_en_gpio)) {
 		rc = gpio_request(ctrl_pdata->avdd_en_gpio,
 						"avdd_enable");
@@ -390,7 +396,9 @@ static int mdss_dsi_request_gpios(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 				       rc);
 			goto avdd_en_gpio_err;
 		}
+		pr_info("%s: requested avdd_en GPIO %d", __func__, ctrl_pdata->avdd_en_gpio);
 	}
+
 	if (gpio_is_valid(ctrl_pdata->lcd_mode_sel_gpio)) {
 		rc = gpio_request(ctrl_pdata->lcd_mode_sel_gpio, "mode_sel");
 		if (rc) {
@@ -398,8 +406,10 @@ static int mdss_dsi_request_gpios(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 								rc);
 			goto lcd_mode_sel_gpio_err;
 		}
+		pr_info("%s: requested lcd_mode_sel GPIO %d", __func__, ctrl_pdata->lcd_mode_sel_gpio);
 	}
 
+	pr_info("%s: returning OK, all GPIOs are acquired", __func__);
 	return rc;
 
 lcd_mode_sel_gpio_err:
@@ -540,7 +550,7 @@ int mdss_dsi_panel_reset(struct mdss_panel_data *pdata, int enable)
 	}
 
 	if (!gpio_is_valid(ctrl_pdata->disp_en_gpio)) {
-		pr_debug("%s:%d, reset line not configured\n",
+		pr_debug("%s:%d, disp_en_gpio not configured\n",
 			   __func__, __LINE__);
 	}
 
@@ -550,7 +560,7 @@ int mdss_dsi_panel_reset(struct mdss_panel_data *pdata, int enable)
 		return rc;
 	}
 
-	pr_debug("%s: enable = %d\n", __func__, enable);
+	pr_info("%s: enable = %d, cont_splash_enabled = %u\n", __func__, enable, pinfo->cont_splash_enabled);
 
 	if (enable) {
 		rc = mdss_dsi_request_gpios(ctrl_pdata);
@@ -573,9 +583,12 @@ int mdss_dsi_panel_reset(struct mdss_panel_data *pdata, int enable)
 			usleep_range(12 * 1000, 12 * 1000);
 #ifdef CONFIG_MACH_XIAOMI_LAVENDER
 			if(!enable_gesture_mode && !synaptics_gesture_enable_flag) {
+				pr_info("%s: setting TP_RESET_GPIO (%d) to output 1", __func__, TP_RESET_GPIO);
 				if (gpio_direction_output(TP_RESET_GPIO, 1)) {
 					pr_err("%s: unable to set dir for touch reset gpio\n", __func__);
 				}
+			} else {
+				pr_info("%s: gesture modes not enabled", __func__);
 			}
 #endif
 #endif
@@ -656,9 +669,11 @@ int mdss_dsi_panel_reset(struct mdss_panel_data *pdata, int enable)
 			printk(KERN_ERR "[lcd][tp][gesture] keep lcd_reset and tp_reset gpio to high.\n");
 			goto keep_lcd_and_tp_reset;
 		}
+		pr_info("%s: setting TP_RESET_GPIO (%d) to out 0", __func__, TP_RESET_GPIO);
 		if (gpio_direction_output(TP_RESET_GPIO, 0)) {
 			pr_err("%s: unable to set dir for touch reset gpio\n", __func__);
 		}
+		pr_info("%s: setting rst_gpio (%d) to value 0", __func__, ctrl_pdata->rst_gpio);
 		gpio_set_value((ctrl_pdata->rst_gpio), 0);
 keep_lcd_and_tp_reset:
 #elif defined(CONFIG_MACH_XIAOMI_TULIP)
@@ -1208,7 +1223,7 @@ static int mdss_dsi_panel_on(struct mdss_panel_data *pdata)
 	ctrl = container_of(pdata, struct mdss_dsi_ctrl_pdata,
 				panel_data);
 
-	pr_debug("%s: ndx=%d\n", __func__, ctrl->ndx);
+	pr_debug("%s: ctrl_ndx=%d\n", __func__, ctrl->ndx);
 
 	if (pinfo->dcs_cmd_by_left) {
 		if (ctrl->ndx != DSI_CTRL_LEFT)
@@ -1221,7 +1236,7 @@ static int mdss_dsi_panel_on(struct mdss_panel_data *pdata)
 			(pinfo->mipi.boot_mode != pinfo->mipi.mode))
 		on_cmds = &ctrl->post_dms_on_cmds;
 
-	pr_debug("%s: ndx=%d cmd_cnt=%d\n", __func__,
+	pr_info("%s: ctrl_ndx=%d cmd_cnt=%d\n", __func__,
 				ctrl->ndx, on_cmds->cmd_cnt);
 
 	if (on_cmds->cmd_cnt)
@@ -1448,7 +1463,7 @@ static int mdss_dsi_parse_dcs_cmds(struct device_node *np,
 
 	data = of_get_property(np, cmd_key, &blen);
 	if (!data) {
-		pr_err("%s: failed, key=%s\n", __func__, cmd_key);
+		pr_err("%s: -- failed -- key=%s\n", __func__, cmd_key);
 		return -ENOMEM;
 	}
 
@@ -1515,8 +1530,8 @@ static int mdss_dsi_parse_dcs_cmds(struct device_node *np,
 			pcmds->link_state = DSI_LP_MODE;
 	}
 
-	pr_debug("%s: dcs_cmd=%x len=%d, cmd_cnt=%d link_state=%d\n", __func__,
-		pcmds->buf[0], pcmds->blen, pcmds->cmd_cnt, pcmds->link_state);
+	pr_debug("%s: (%s) dcs_cmd=%x len=%d, cmd_cnt=%d link_state=%s\n", __func__, cmd_key,
+		pcmds->buf[0], pcmds->blen, pcmds->cmd_cnt, pcmds->link_state ? "HS" : "LP");
 
 	return 0;
 
@@ -2103,6 +2118,7 @@ static int mdss_dsi_parse_reset_seq(struct device_node *np,
 			*rst_len = num;
 		}
 	}
+	pr_debug("%s: reset sequence length: %u", __func__, *rst_len);
 	return 0;
 }
 
@@ -2140,14 +2156,15 @@ static bool mdss_dsi_cmp_panel_reg_v2(struct mdss_dsi_ctrl_pdata *ctrl)
 static int mdss_dsi_gen_read_status(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
 {
 	if (!mdss_dsi_cmp_panel_reg_v2(ctrl_pdata)) {
-		pr_err("%s: Read back value from panel is incorrect\n",
-							__func__);
+		pr_err("%s: Read back value from panel is incorrect\n", __func__);
 #ifdef CONFIG_MACH_LONGCHEER
-	if ((strstr(g_lcd_id,"nt36672") != NULL)||(strstr(g_lcd_id,"nt36672a") != NULL)||(strstr(g_lcd_id,"td4320") != NULL))
-		ESD_TE_status = true;
+		if ((strstr(g_lcd_id, "nt36672") != NULL) || (strstr(g_lcd_id, "nt36672a") != NULL) || (strstr(g_lcd_id,"td4320") != NULL))
+			ESD_TE_status = true;
+		pr_err("%s: ESD_TE_status: %d", __func__, ESD_TE_status);
 #endif
 		return -EINVAL;
 	} else {
+		pr_info("%s: mdss_dsi_cmp_panel_reg_v2() OK", __func__);
 		return 1;
 	}
 }
@@ -2384,6 +2401,7 @@ static void mdss_dsi_parse_esd_params(struct device_node *np,
 
 	pinfo->esd_check_enabled = of_property_read_bool(np,
 		"qcom,esd-check-enabled");
+	pr_info("%s: qcom,esd-check-enabled = %d", __func__, pinfo->esd_check_enabled);
 
 	if (!pinfo->esd_check_enabled)
 		return;

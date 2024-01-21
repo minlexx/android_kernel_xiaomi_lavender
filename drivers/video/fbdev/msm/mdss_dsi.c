@@ -496,6 +496,7 @@ static int mdss_dsi_panel_power_ctrl(struct mdss_panel_data *pdata,
 #ifdef CONFIG_MACH_LONGCHEER
 		{
 			if (ESD_TE_status) {
+				printk(KERN_ERR "MDSS_PANEL_POWER_ON: ESD_TE_status is true, will do resets chain");
 				ctrl_pdata = container_of(pdata, struct mdss_dsi_ctrl_pdata,
 							panel_data);
 
