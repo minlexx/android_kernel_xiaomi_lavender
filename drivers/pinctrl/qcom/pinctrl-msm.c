@@ -506,8 +506,14 @@ static void msm_gpio_dbg_show(struct seq_file *s, struct gpio_chip *chip)
 
 	for (i = 0; i < chip->ngpio; i++, gpio++) {
 		/* Bypass GPIO pins owned by TZ */
+#ifdef CONFIG_MACH_XIAOMI_LAVENDER
+		/* lavender has reserved 4 GPIOs starting from GPIO_8 for fingerprint */
+		switch (gpio)
+			case 8 ... 11: continue;
+#else
 		switch (gpio)
 			case 81 ... 84: continue;
+#endif
 
 		msm_gpio_dbg_show_one(s, NULL, chip, i, gpio);
 		seq_puts(s, "\n");
