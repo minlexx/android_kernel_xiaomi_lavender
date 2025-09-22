@@ -649,7 +649,7 @@ static int qpnp_lcdb_enable(struct qpnp_lcdb *lcdb)
 	u8 val = 0;
 
 	if (lcdb->lcdb_enabled || lcdb->lcdb_sc_disable) {
-		pr_debug("lcdb_enabled=%d lcdb_sc_disable=%d\n",
+		pr_info("lcdb_enabled=%d lcdb_sc_disable=%d\n",
 			lcdb->lcdb_enabled, lcdb->lcdb_sc_disable);
 		return 0;
 	}
@@ -704,7 +704,7 @@ static int qpnp_lcdb_enable(struct qpnp_lcdb *lcdb)
 	}
 
 	lcdb->lcdb_enabled = true;
-	pr_debug("lcdb enabled successfully!\n");
+	pr_info("lcdb enabled successfully!\n");
 
 	return 0;
 
@@ -736,10 +736,12 @@ static int qpnp_lcdb_disable(struct qpnp_lcdb *lcdb)
 	val = 0;
 	rc = qpnp_lcdb_write(lcdb, lcdb->base + LCDB_ENABLE_CTL1_REG,
 							&val, 1);
-	if (rc < 0)
+	if (rc < 0) {
 		pr_err("Failed to disable lcdb rc= %d\n", rc);
-	else
+	} else {
 		lcdb->lcdb_enabled = false;
+		pr_info("LCDB disabled\n");
+	}
 
 	return rc;
 }
@@ -888,7 +890,7 @@ static int qpnp_lcdb_set_bst_voltage(struct qpnp_lcdb *lcdb,
 			pr_err("Failed to set boost voltage %d mv rc=%d\n",
 				bst_voltage_mv, rc);
 		} else {
-			pr_debug("Boost voltage set = %d mv (0x%02x = 0x%02x)\n",
+			pr_info("Boost voltage set = %d mv (0x%02x = 0x%02x)\n",
 			      bst_voltage_mv, LCDB_BST_OUTPUT_VOLTAGE_REG, val);
 			bst->voltage_mv = bst_voltage_mv;
 		}
@@ -954,7 +956,7 @@ static int qpnp_lcdb_set_voltage(struct qpnp_lcdb *lcdb,
 		pr_err("Failed to set output voltage %d mv for %s rc=%d\n",
 			voltage_mv, (type == LDO) ? "LDO" : "NCP", rc);
 	else
-		pr_debug("%s voltage set = %d mv (0x%02x = 0x%02x)\n",
+		pr_info("%s voltage set = %d mv (0x%02x = 0x%02x)\n",
 			(type == LDO) ? "LDO" : "NCP", voltage_mv, offset, val);
 
 	return rc;
@@ -989,7 +991,7 @@ static int qpnp_lcdb_get_voltage(struct qpnp_lcdb *lcdb,
 	}
 
 	if (!rc)
-		pr_debug("%s voltage read-back = %d mv (0x%02x = 0x%02x)\n",
+		pr_info("%s voltage read-back = %d mv (0x%02x = 0x%02x)\n",
 					(type == LDO) ? "LDO" : "NCP",
 					*voltage_mv, offset, val);
 
@@ -1734,7 +1736,7 @@ static void qpnp_lcdb_pmic_config(struct qpnp_lcdb *lcdb)
 		break;
 	}
 
-	pr_debug("LCDB wa_flags = 0x%2x\n", lcdb->wa_flags);
+	pr_info("LCDB wa_flags = 0x%2x\n", lcdb->wa_flags);
 }
 
 static int qpnp_lcdb_hw_init(struct qpnp_lcdb *lcdb)
@@ -1812,7 +1814,7 @@ static int qpnp_lcdb_parse_dt(struct qpnp_lcdb *lcdb)
 
 	lcdb->pmic_rev_id = get_revid_data(revid_dev_node);
 	if (IS_ERR(lcdb->pmic_rev_id)) {
-		pr_debug("Unable to get revid data\n");
+		pr_err("Unable to get revid data\n");
 		/*
 		 * revid should to be defined, return -EPROBE_DEFER
 		 * until the revid module registers.
@@ -1857,7 +1859,7 @@ static int qpnp_lcdb_parse_dt(struct qpnp_lcdb *lcdb)
 
 	lcdb->sc_irq = platform_get_irq_byname(lcdb->pdev, "sc-irq");
 	if (lcdb->sc_irq < 0)
-		pr_debug("sc irq is not defined\n");
+		pr_warn("sc irq is not defined\n");
 
 	return rc;
 }
