@@ -68,6 +68,8 @@
 #include "cds_concurrency.h"
 #include "wma_nan_datapath.h"
 
+uint8_t *mac_trace_get_wma_msg_string(uint16_t wmaMsg);
+
 /**
  * wma_find_vdev_by_addr() - find vdev_id from mac address
  * @wma: wma handle

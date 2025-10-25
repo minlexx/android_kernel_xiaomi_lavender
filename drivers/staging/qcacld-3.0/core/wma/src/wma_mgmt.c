@@ -1532,6 +1532,10 @@ static QDF_STATUS wma_setup_install_key_cmd(tp_wma_handle wma_handle,
 	struct set_key_params params;
 	QDF_STATUS status = QDF_STATUS_SUCCESS;
 	struct wma_txrx_node *iface = NULL;
+
+	printk(KERN_INFO "%s: vdev_id: %u, key_type: %u\n", __func__,
+		   (unsigned)key_params->vdev_id, key_params->key_type);
+
 	if ((key_params->key_type == eSIR_ED_NONE &&
 	     key_params->key_len) || (key_params->key_type != eSIR_ED_NONE &&
 				      !key_params->key_len)) {

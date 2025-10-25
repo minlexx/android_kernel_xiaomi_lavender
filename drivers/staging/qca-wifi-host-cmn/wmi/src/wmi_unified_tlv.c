@@ -3885,6 +3885,9 @@ QDF_STATUS send_setup_install_key_cmd_tlv(wmi_unified_t wmi_handle,
 	uint32_t len;
 	uint8_t *key_data;
 	QDF_STATUS status;
+#ifdef FEATURE_WLAN_WAPI
+	printk(KERN_INFO "%s: FEATURE_WLAN_WAPI is enabled\n", __func__);
+#endif
 
 	len = sizeof(*cmd) + roundup(key_params->key_len, sizeof(uint32_t)) +
 	       WMI_TLV_HDR_SIZE;
@@ -3927,9 +3930,15 @@ QDF_STATUS send_setup_install_key_cmd_tlv(wmi_unified_t wmi_handle,
 		     sizeof(wmi_key_seq_counter));
 	cmd->key_len = key_params->key_len;
 
+	printk(KERN_INFO "%s: sending install_key: vdev_id: %u, key_idx: %u, key_cipher: 0x%x\n", __func__,
+		   (uint32_t)key_params->vdev_id,
+		   key_params->key_idx,
+		   key_params->key_cipher
+	);
 	status = wmi_unified_cmd_send(wmi_handle, buf, len,
 					      WMI_VDEV_INSTALL_KEY_CMDID);
 	if (QDF_IS_STATUS_ERROR(status)) {
+		printk(KERN_INFO "%s: wmi_unified_cmd_send(WMI_VDEV_INSTALL_KEY_CMDID) returned error status: %u\n", __func__, (unsigned)status);
 		qdf_mem_zero(wmi_buf_data(buf), len);
 		wmi_buf_free(buf);
 	}

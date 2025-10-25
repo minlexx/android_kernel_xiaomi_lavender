@@ -4700,8 +4700,11 @@ static void lim_tx_mgmt_frame(tpAniSirGlobal mac_ctx,
 		return;
 	}
 
+#ifdef WLAN_DEBUG
+	(void)fc; /* silence possible unused variable -Wall error */
 	MTRACE(qdf_trace(QDF_MODULE_ID_PE, TRACE_CODE_TX_MGMT,
 			 session->peSessionId, fc->subType));
+#endif
 
 	mac_ctx->auth_ack_status = LIM_AUTH_ACK_NOT_RCD;
 	min_rid = lim_get_min_session_txrate(session);
